@@ -1,0 +1,43 @@
+To make a port in a Kubernetes pod accessible only over Tailscale IPs, you can use network policies along with Tailscale's network configuration. Here are the general steps to achieve this:
+
+1. **Set up Tailscale**:
+   - Install and configure Tailscale on the nodes where your Kubernetes cluster is running. Ensure that the nodes have Tailscale IP addresses.
+
+2. **Label Pods**:
+   - Label the pods that you want to make accessible only over Tailscale IPs. For example, you can add a custom label like `access: tailscale`.
+
+3. **Create NetworkPolicy**:
+   - Create a Kubernetes NetworkPolicy to restrict access to the labeled pods. Here's an example YAML for a NetworkPolicy that allows incoming traffic only from Tailscale IPs:
+
+   ```yaml
+   apiVersion: networking.k8s.io/v1
+   kind: NetworkPolicy
+   metadata:
+     name: tailscale-access-policy
+   spec:
+     podSelector:
+       matchLabels:
+         access: tailscale
+     ingress:
+     - from:
+       - ipBlock:
+           cidr: <Tailscale IP range>
+   ```
+
+   Replace `<Tailscale IP range>` with the appropriate CIDR range for your Tailscale network.
+
+4. **Apply the NetworkPolicy**:
+   - Apply the NetworkPolicy to your Kubernetes cluster using the `kubectl apply` command:
+
+   ```bash
+   kubectl apply -f your-network-policy.yaml
+   ```
+
+   Replace `your-network-policy.yaml` with the filename of your NetworkPolicy YAML file.
+
+5. **Verify Access**:
+   - Test access to the pod from a Tailscale-connected device. You should only be able to access the pod from Tailscale IPs and not from other external IPs.
+
+Keep in mind that these instructions assume you have Tailscale properly configured on your Kubernetes cluster and have labeled the pods you want to restrict access to. Adjust the NetworkPolicy and labels as needed to match your specific use case.
+
+Additionally, make sure you have a good understanding of your Tailscale network's CIDR range and how it operates to effectively configure the NetworkPolicy. Always follow security best practices when restricting access to your services.
